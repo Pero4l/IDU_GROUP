@@ -83,6 +83,8 @@ export interface UpdateRentalPayload {
   status?: string;
   images?: File[];
   videos?: File[];
+  removedImages?: string[];
+  removedVideos?: string[];
   amenities?: string[];
 }
 
