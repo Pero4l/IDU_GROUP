@@ -60,6 +60,8 @@ const Page = () => {
   const [videos, setVideos] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [videoPreviews, setVideoPreviews] = useState<string[]>([]);
+  const [removedImages, setRemovedImages] = useState<string[]>([]);
+  const [removedVideos, setRemovedVideos] = useState<string[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const { data: rentalData, isLoading, isError, error } = useGetRentalById(id);
@@ -118,6 +120,12 @@ const Page = () => {
     () => fees.reduce((acc, curr) => acc + toMoneyNumber(curr), 0),
     [fees],
   );
+  const existingImages = rentalData?.images.filter(
+    (image) => !removedImages.includes(image),
+  ) ?? [];
+  const existingVideos = rentalData?.videos.filter(
+    (video) => !removedVideos.includes(video),
+  ) ?? [];
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -157,6 +165,18 @@ const Page = () => {
     setVideoPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
+  const removeExistingImage = (image: string) => {
+    setRemovedImages((previousImages) =>
+      previousImages.includes(image) ? previousImages : [...previousImages, image],
+    );
+  };
+
+  const removeExistingVideo = (video: string) => {
+    setRemovedVideos((previousVideos) =>
+      previousVideos.includes(video) ? previousVideos : [...previousVideos, video],
+    );
+  };
+
   const onSubmit = (data: FormData) => {
     if (!id) return;
 
@@ -176,6 +196,14 @@ const Page = () => {
       brokeFee: toMoneyNumber(data.brokeFee),
       mgtServiceCharge: toMoneyNumber(data.mgtServiceCharge),
     };
+
+    if (removedImages.length > 0) {
+      payload.removedImages = removedImages;
+    }
+
+    if (removedVideos.length > 0) {
+      payload.removedVideos = removedVideos;
+    }
 
     if (images.length > 0) {
       payload.images = images;
@@ -329,7 +357,8 @@ const Page = () => {
                         <option value="">Select a location</option>
                         <option value="lagos">Lagos</option>
                         <option value="abuja">Abuja</option>
-                        <option value="port-harcourt">Port Harcourt</option>
+                        <option value="port-harcourt">Imo</option>
+                        <option value="port-harcourt">Enugu</option>
                       </select>
                       {errors.location && (
                         <p className="text-red-500 text-xs ml-1">
@@ -511,9 +540,9 @@ const Page = () => {
                   <h3 className="font-bold text-slate-800">Property Images</h3>
                 </div>
 
-                {rentalData.images.length > 0 && (
+                {existingImages.length > 0 && (
                   <div className="mb-4 grid grid-cols-3 gap-2">
-                    {rentalData.images.map((image, index) => (
+                    {existingImages.map((image, index) => (
                       <div
                         key={`${image}-${index}`}
                         className="relative aspect-square rounded-xl overflow-hidden bg-slate-100"
@@ -523,6 +552,15 @@ const Page = () => {
                           alt={`${rentalData.title} ${index + 1}`}
                           className="w-full h-full object-cover"
                         />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingImage(image)}
+                          title="Remove image"
+                          aria-label={`Remove image ${index + 1}`}
+                          className="absolute top-1 right-1 rounded-full bg-red-600 p-1 text-white hover:bg-red-700"
+                        >
+                          <X size={12} />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -580,9 +618,9 @@ const Page = () => {
                   <h3 className="font-bold text-slate-800">Property Videos</h3>
                 </div>
 
-                {rentalData.videos.length > 0 && (
+                {existingVideos.length > 0 && (
                   <div className="mb-4 grid grid-cols-2 gap-2">
-                    {rentalData.videos.map((video, index) => (
+                    {existingVideos.map((video, index) => (
                       <div
                         key={`${video}-${index}`}
                         className="relative aspect-video rounded-xl overflow-hidden bg-slate-100"
@@ -592,6 +630,15 @@ const Page = () => {
                           controls
                           className="w-full h-full object-cover"
                         />
+                        <button
+                          type="button"
+                          onClick={() => removeExistingVideo(video)}
+                          title="Remove video"
+                          aria-label={`Remove video ${index + 1}`}
+                          className="absolute top-1 right-1 rounded-full bg-red-600 p-1 text-white hover:bg-red-700"
+                        >
+                          <X size={12} />
+                        </button>
                       </div>
                     ))}
                   </div>
